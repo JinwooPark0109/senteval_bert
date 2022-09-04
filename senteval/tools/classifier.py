@@ -182,19 +182,36 @@ class MLP(PyTorchClassifier):
         self.dropout = 0. if "dropout" not in params else params["dropout"]
         self.batch_size = 64 if "batch_size" not in params else params["batch_size"]
 
-        if params["nhid"] == 0:
-            self.model = nn.Sequential(
-                nn.Linear(self.inputdim, self.nclasses),
-            ).cuda()
+        self.bert_encoder= params.get('bert_encoder', default=None)
+        if self.bert_encoder:
+            if params["nhid"] == 0:
+                self.model = nn.Sequential(
+                    self.bert_encoder,
+                    nn.Linear(self.inputdim, self.nclasses),
+                ).cuda()
+            else:
+                self.model = nn.Sequential(
+                    self.bert_encoder,
+                    nn.Linear(self.inputdim, params["nhid"]),
+                    nn.Dropout(p=self.dropout),
+                    nn.Sigmoid(),
+                    nn.Linear(params["nhid"], self.nclasses),
+                ).cuda()
         else:
-            self.model = nn.Sequential(
-                nn.Linear(self.inputdim, params["nhid"]),
-                nn.Dropout(p=self.dropout),
-                nn.Sigmoid(),
-                nn.Linear(params["nhid"], self.nclasses),
-            ).cuda()
+            if params["nhid"] == 0:
+                self.model = nn.Sequential(
+                    nn.Linear(self.inputdim, self.nclasses),
+                ).cuda()
+            else:
+                self.model = nn.Sequential(
+                    nn.Linear(self.inputdim, params["nhid"]),
+                    nn.Dropout(p=self.dropout),
+                    nn.Sigmoid(),
+                    nn.Linear(params["nhid"], self.nclasses),
+                ).cuda()
 
-        self.loss_fn = nn.CrossEntropyLoss().cuda()
+        #self.loss_fn = nn.CrossEntropyLoss().cuda()
+        self.loss_fn = params.get('custom_loss', default=nn.CrossEntropyLoss().cuda())
         self.loss_fn.size_average = False
 
         optim_fn, optim_params = utils.get_optimizer(self.optim)

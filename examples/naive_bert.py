@@ -31,40 +31,56 @@ def prepare(params, samples):
 def batcher(params, batch):
     batch = [sent if sent != [] else ['.'] for sent in batch]
     embeddings = []
-
-    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-    model = BertModel.from_pretrained("bert-base-uncased")  # this can replaced by custom BERT
-
-    input_dict=tokenizer(batch, padding="max_length", return_tensors="pt")
-    # input_ids:  (batch, seq len(currently padded to max len), dim(768) )
-    # token_type_ids: (batch, seq len), 0 and 1 for next sentence prediction(NSP) of BERT pretraining. dummy at inference or finetuning
-    # attention_mask: (batch, seq len), 0 for padding and 1 for non-padding token.
-
-    output=mode(**input_dict)
-
-    embeddings=output['last_hidden_state'][:,0,:]
-    # last_hidden_state: (batch, seq len, dim)
-    # pooler_output: (batch, dim) in case usning pooler(MLP on CLS output)
-
+    for sent in batch:
+        embeddings.append(params.tokenizer.encode(sent, padding="max_length", return_tensors="pt"))
     return embeddings
+
+class custom_CE_loss(target, input):
+    def __init__(self):
+        pass
+    def __foward__(self, input, target):
+        return torch.nn.functional.cross_entropy(input, target)
+
+class wrapped_bert_encoder(torch.nn.Module):
+    def __init__(self, pad_token=0, freeze_bert=False):
+        super().__init__()
+        self.net = BertModel.from_pretrained("../data/bert-base-uncased/")
+        if freeze_bert:
+            for param in self.net.parameters():
+                param.requires_grad=False
+        self.pad_token = pad_token
+
+    def make_input_dict(self, input):
+        return {"input_ids":input, "token_type_ids": torch.zeros_like(input, dtype=torch.int32) , "attention_mask": (input!=self.pad_token).int()}
+
+    def foward(self, input):
+        input_dict=self.make_input_dict(input)
+        output=self.net(**input_dict)
+        return output['last_hidden_state'][:,0,:]
 
 # Set params for SentEval
 params_senteval = {'task_path': PATH_TO_DATA, 'usepytorch': True, 'kfold': 5}
-# nhid 0:  linear classifier
-# else : 2 layer MLP with {nhid}-dim hidden layer
-params_senteval['classifier'] = {'nhid': 0, 'optim': 'rmsprop', 'batch_size': 128,
-                                 'tenacity': 3, 'epoch_size': 2}
+
+params_senteval['tokenizer']=BertTokenizer.from_pretrained("../data/bert-base-uncased/vocab.txt")
+params_senteval['classifier'] = {'nhid': 0, 'optim': 'rmsprop', 'batch_size': 128, # nhid 0 for linear classifier, else 2 layer MLP with {nhid}-dim hidden layer
+                                 'tenacity': 3, 'epoch_size': 2,
+                                 'bert_encoder': wrapped_bert_encoder(params_senteval['tokenizer'].vocab['[PAD]']),
+                                 'custom_loss': custom_CE_loss()
+                                 }
 
 # Set up logger
 logging.basicConfig(format='%(asctime)s : %(message)s', level=logging.DEBUG)
 
 if __name__ == "__main__":
     se = senteval.engine.SE(params_senteval, batcher, prepare)
+    '''
     transfer_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16',
                       'MR', 'CR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC',
                       'SICKEntailment', 'SICKRelatedness', 'STSBenchmark',
                       'Length', 'WordContent', 'Depth', 'TopConstituents',
                       'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
                       'OddManOut', 'CoordinationInversion']
+    '''
+    transfer_tasks = ['STS12', 'MR']
     results = se.eval(transfer_tasks)
     print(results)
