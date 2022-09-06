@@ -182,7 +182,8 @@ class MLP(PyTorchClassifier):
         self.dropout = 0. if "dropout" not in params else params["dropout"]
         self.batch_size = 64 if "batch_size" not in params else params["batch_size"]
 
-        self.bert_encoder= params.get('bert_encoder', default=None)
+        print(params.keys())
+        self.bert_encoder= params.get('bert_encoder', None)
         if self.bert_encoder:
             if params["nhid"] == 0:
                 self.model = nn.Sequential(
