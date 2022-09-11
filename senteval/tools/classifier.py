@@ -182,7 +182,6 @@ class MLP(PyTorchClassifier):
         self.dropout = 0. if "dropout" not in params else params["dropout"]
         self.batch_size = 64 if "batch_size" not in params else params["batch_size"]
 
-        print(params.keys())
         self.bert_encoder= params.get('bert_encoder', None)
         if self.bert_encoder:
             bert_encoder=self.bert_encoder['encoder_builder'](**self.bert_encoder['encoder_args'])

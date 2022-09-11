@@ -56,7 +56,8 @@ class wrapped_bert_encoder(torch.nn.Module):
         self.pad_token = pad_token
 
     def make_input_dict(self, input):
-        return {"input_ids":input, "token_type_ids": torch.zeros_like(input, dtype=torch.int32) , "attention_mask": (input!=self.pad_token).int()}
+        # due to line 53 at classifier.py, cast input to int again
+        return {"input_ids":input.int(), "token_type_ids": torch.zeros_like(input, dtype=torch.int32) , "attention_mask": (input!=self.pad_token).int()}
 
     def forward(self, input):
         input_dict=self.make_input_dict(input)
