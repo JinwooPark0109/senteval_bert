@@ -67,11 +67,16 @@ class wrapped_bert_encoder(torch.nn.Module):
 def get_params():
     # Set params for SentEval
     ret = {'task_path': PATH_TO_DATA, 'usepytorch': True, 'kfold': 5}
-
     ret['tokenizer']=BertTokenizer.from_pretrained(os.path.join(PATH_TO_BERT,"vocab.txt"))
+    encoder_config={'encoder_builder': wrapped_bert_encoder,
+                    'encoder_args': {
+                        "pad_token":ret['tokenizer'].vocab['[PAD]'],
+                        "freeze_bert":False
+                        }
+                    }
     ret['classifier'] = {'nhid': 0, 'optim': 'rmsprop', 'batch_size': 128, # nhid 0 for linear classifier, else 2 layer MLP with {nhid}-dim hidden layer
                         'tenacity': 3, 'epoch_size': 2,
-                        'bert_encoder': wrapped_bert_encoder(ret['tokenizer'].vocab['[PAD]']),
+                        'bert_encoder': encoder_config,
                         'custom_loss': custom_CE_loss()
                         }
     return ret

@@ -185,14 +185,15 @@ class MLP(PyTorchClassifier):
         print(params.keys())
         self.bert_encoder= params.get('bert_encoder', None)
         if self.bert_encoder:
+            bert_encoder=self.bert_encoder['encoder_builder'](**self.bert_encoder['encoder_args'])
             if params["nhid"] == 0:
                 self.model = nn.Sequential(
-                    self.bert_encoder,
+                    bert_encoder,
                     nn.Linear(self.inputdim, self.nclasses),
                 ).cuda()
             else:
                 self.model = nn.Sequential(
-                    self.bert_encoder,
+                    bert_encoder,
                     nn.Linear(self.inputdim, params["nhid"]),
                     nn.Dropout(p=self.dropout),
                     nn.Sigmoid(),
@@ -212,7 +213,7 @@ class MLP(PyTorchClassifier):
                 ).cuda()
 
         #self.loss_fn = nn.CrossEntropyLoss().cuda()
-        self.loss_fn = params.get('custom_loss', default=nn.CrossEntropyLoss().cuda())
+        self.loss_fn = params.get('custom_loss', nn.CrossEntropyLoss().cuda())
         self.loss_fn.size_average = False
 
         optim_fn, optim_params = utils.get_optimizer(self.optim)
