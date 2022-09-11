@@ -58,7 +58,7 @@ class wrapped_bert_encoder(torch.nn.Module):
     def make_input_dict(self, input):
         return {"input_ids":input, "token_type_ids": torch.zeros_like(input, dtype=torch.int32) , "attention_mask": (input!=self.pad_token).int()}
 
-    def foward(self, input):
+    def forward(self, input):
         input_dict=self.make_input_dict(input)
         output=self.net(**input_dict)
         return output['last_hidden_state'][:,0,:]
