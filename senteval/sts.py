@@ -16,12 +16,12 @@ import os
 import io
 import numpy as np
 import logging
+from tqdm import tqdm
 
 from scipy.stats import spearmanr, pearsonr
 
 from senteval.utils import cosine
 from senteval.sick import SICKRelatednessEval
-
 
 class STSEval(object):
     def loadFile(self, fpath):
@@ -61,7 +61,7 @@ class STSEval(object):
         for dataset in self.datasets:
             sys_scores = []
             input1, input2, gs_scores = self.data[dataset]
-            for ii in range(0, len(gs_scores), params.batch_size):
+            for ii in tqdm(range(0, len(gs_scores), params.batch_size)):
                 batch1 = input1[ii:ii + params.batch_size]
                 batch2 = input2[ii:ii + params.batch_size]
 

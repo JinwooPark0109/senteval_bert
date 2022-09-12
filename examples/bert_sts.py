@@ -21,8 +21,9 @@ import argparse
 HOME = os.path.join(os.path.expanduser('~'))
 PATH_TO_SENTEVAL = os.path.join(HOME, "senteval_bert")
 PATH_TO_DATA = os.path.join(PATH_TO_SENTEVAL,"data")
-PATH_TO_BERT = os.path.join(HOME,"bert-base-uncased/")
-PATH_TO_BERT = os.path.join(HOME,"all-MiniLM-L6-v2")
+PATH_TO_BERT = os.path.join(HOME,"bert-base-uncased/") # original bert
+PATH_TO_BERT = os.path.join(HOME,"all-MiniLM-L6-v2") # sentence bert
+PATH_TO_BERT = os.path.join(HOME,"unsup-simcse-bert-base-uncased") # simCSE(unsup)
 
 # import SentEval
 sys.path.insert(0, PATH_TO_SENTEVAL)
