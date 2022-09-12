@@ -66,12 +66,14 @@ class InnerKFoldClassifier(object):
         count = 0
         for train_idx, test_idx in skf.split(self.X, self.y):
             count += 1
+            logging.info('{0} fold train/test split'.format(count))
             X_train, X_test = self.X[train_idx], self.X[test_idx]
             y_train, y_test = self.y[train_idx], self.y[test_idx]
             scores = []
             for reg in regs:
                 regscores = []
-                for inner_train_idx, inner_test_idx in innerskf.split(X_train, y_train):
+                for inner_count, (inner_train_idx, inner_test_idx) in enumerate(innerskf.split(X_train, y_train),1):
+                    logging.info('{0} fold train/val split'.format(inner_count))
                     X_in_train, X_in_test = X_train[inner_train_idx], X_train[inner_test_idx]
                     y_in_train, y_in_test = y_train[inner_train_idx], y_train[inner_test_idx]
                     if self.usepytorch:

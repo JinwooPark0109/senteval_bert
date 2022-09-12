@@ -20,6 +20,8 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
+import logging
+from tqdm import tqdm
 
 class PyTorchClassifier(object):
     def __init__(self, inputdim, nclasses, l2reg=0., batch_size=64, seed=1111,
@@ -84,10 +86,11 @@ class PyTorchClassifier(object):
 
     def trainepoch(self, X, y, epoch_size=1):
         self.model.train()
+        logging.info("{0} epoch start:".format(self.nepoch))
         for _ in range(self.nepoch, self.nepoch + epoch_size):
             permutation = np.random.permutation(len(X))
             all_costs = []
-            for i in range(0, len(X), self.batch_size):
+            for i in tqdm(range(0, len(X), self.batch_size)):
                 # forward
                 idx = torch.from_numpy(permutation[i:i + self.batch_size]).long().to(X.device)
 
@@ -184,7 +187,9 @@ class MLP(PyTorchClassifier):
 
         self.bert_encoder= params.get('bert_encoder', None)
         if self.bert_encoder:
+            logging.info("bert encoder init start")
             bert_encoder=self.bert_encoder['encoder_builder'](**self.bert_encoder['encoder_args'])
+            logging.info("bert encoder init complete")
             self.inputdim=bert_encoder.net.config.hidden_size #overwrite input dim of classifier
             if params["nhid"] == 0:
                 self.model = nn.Sequential(
@@ -211,6 +216,7 @@ class MLP(PyTorchClassifier):
                     nn.Sigmoid(),
                     nn.Linear(params["nhid"], self.nclasses),
                 ).cuda()
+        logging.info("model init complete")
 
         #self.loss_fn = nn.CrossEntropyLoss().cuda()
         self.loss_fn = params.get('custom_loss', nn.CrossEntropyLoss().cuda())

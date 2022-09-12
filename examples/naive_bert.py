@@ -42,8 +42,8 @@ def batcher(params, batch):
 
 class custom_CE_loss:
     def __init__(self):
-        pass
-    def __foward__(self, input, target):
+        print("custom loss used")
+    def __call__(self, input, target):
         return torch.nn.functional.cross_entropy(input, target)
 
 class wrapped_bert_encoder(torch.nn.Module):
@@ -57,7 +57,7 @@ class wrapped_bert_encoder(torch.nn.Module):
 
     def make_input_dict(self, input):
         # due to line 53 at classifier.py, cast input to int again
-        return {"input_ids":input.int(), "token_type_ids": torch.zeros_like(input, dtype=torch.int32) , "attention_mask": (input!=self.pad_token).int()}
+        return {"input_ids":input.int(), "token_type_ids": torch.zeros_like(input, dtype=torch.int32) , "attention_mask": (input.int()!=self.pad_token).int()}
 
     def forward(self, input):
         input_dict=self.make_input_dict(input)
@@ -75,7 +75,7 @@ def get_params():
                         "freeze_bert":False
                         }
                     }
-    ret['classifier'] = {'nhid': 0, 'optim': 'rmsprop', 'batch_size': 128, # nhid 0 for linear classifier, else 2 layer MLP with {nhid}-dim hidden layer
+    ret['classifier'] = {'nhid': 0, 'optim': 'rmsprop', 'batch_size': 32, # nhid 0 for linear classifier, else 2 layer MLP with {nhid}-dim hidden layer
                         'tenacity': 3, 'epoch_size': 2,
                         'bert_encoder': encoder_config,
                         'custom_loss': custom_CE_loss()
