@@ -185,6 +185,7 @@ class MLP(PyTorchClassifier):
         self.bert_encoder= params.get('bert_encoder', None)
         if self.bert_encoder:
             bert_encoder=self.bert_encoder['encoder_builder'](**self.bert_encoder['encoder_args'])
+            self.inputdim=bert_encoder.net.config.hidden_size #overwrite input dim of classifier
             if params["nhid"] == 0:
                 self.model = nn.Sequential(
                     bert_encoder,
