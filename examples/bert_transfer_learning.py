@@ -77,10 +77,10 @@ def get_params():
                         }
                     }
     ret['classifier'] = {'nhid': 0, 'optim': 'rmsprop', 'batch_size': 32, # nhid 0 for linear classifier, else 2 layer MLP with {nhid}-dim hidden layer
-                        'tenacity': 3, 'epoch_size': 2,
-                        'bert_encoder': encoder_config,
-                        'custom_loss': custom_CE_loss()
-                        }
+            'tenacity': 3, 'epoch_size': 1,
+            'bert_encoder': encoder_config,
+            'custom_loss': custom_CE_loss()
+            }
     return ret
 
 # Set up logger
